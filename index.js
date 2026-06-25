@@ -265,4 +265,18 @@ app.delete(`/genres/:bookID`, async (request, response) => {
     response.send("Deleted genres for book.")
 });
 
+// --------- comments
+
+app.get(`/comments/:bookID`, async (request, response) => {
+    const bookID = request.params.bookID;
+    const comments = await sql`SELECT c.id, c.user_id, c.text, u.first_name, u.last_name FROM Comments c JOIN Users u ON c.user_id = u.id WHERE c.book_id = ${bookID};`;
+    response.send(comments);
+});
+
+app.post(`/comments`, async (request, response) => {
+    const comment = request.body;
+    const post = await sql`INSERT INTO Comments (user_id, book_id, text) VALUES (${comment.user_id}, ${comment.book_id}, ${comment.text});`;
+    response.send(post);
+});
+
 app.listen(port, () => console.log(` My App listening at http://localhost:${port}`));
