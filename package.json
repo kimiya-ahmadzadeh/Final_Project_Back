@@ -1,0 +1,17 @@
+{
+  "name": "bookworm_back",
+  "version": "1.0.0",
+  "description": "backend for web final project",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}
