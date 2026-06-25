@@ -234,7 +234,7 @@ app.get(`/genres/:genreID/:bookID`, async (request, response) => {
     search.length == 0 ? response.send(false) : response.send(true);
 });
 
-app.get(`/genres/:genreID/books`, async (request, response) => {
+app.get(`/books/genre/:genreID`, async (request, response) => {
     const genreID = request.params.genreID;
     const books = await sql`SELECT id, cover, title, author FROM Books b JOIN BookSubjects s on b.id = s.book_id
     WHERE s.subject_id = ${genreID};`
@@ -263,4 +263,6 @@ app.delete(`/genres/:bookID`, async (request, response) => {
     const bookID = request.params.bookID;
     const clear = await sql`DELETE FROM BookSubjects WHERE book_id = ${bookID};`;
     response.send("Deleted genres for book.")
-}); 
+});
+
+app.listen(port, () => console.log(` My App listening at http://localhost:${port}`));
