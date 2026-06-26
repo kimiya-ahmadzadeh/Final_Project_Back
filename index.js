@@ -94,15 +94,14 @@ app.post(`/users`, async (request, response) => {
     response.send(created);
 });
 
-app.put(`/users/:id`, async (request, response) => {
-    const id = request.params.id;
+app.put(`/users`, async (request, response) => {
     const user = request.body;
-    const search = await sql`SELECT * FROM Users WHERE id = ${id};`;
+    const search = await sql`SELECT * FROM Users WHERE id = ${user.id};`;
     if (search.length == 0) {
         response.status(404).send(`Error in finding user with id ${id}`);
     } else {
         const created = await sql`UPDATE Users SET first_name = ${user.first_name}, last_name = ${user.last_name}, picture = ${user.picture},
-         bio = ${user.bio}, username = ${user.username}, password = ${user.password}, is_admin = ${user.is_admin} WHERE id = ${id};`;
+         bio = ${user.bio}, username = ${user.username}, password = ${user.password}, is_admin = ${user.is_admin} WHERE id = ${user.id};`;
         response.send(created);
     }
 });
@@ -133,15 +132,14 @@ app.post(`/users/lists`, async (request, response) => {
     response.send(created);
 });
 
-app.put(`/users/lists/:listID`, async (request, response) => {
-    const listID = request.params.listID;
+app.put(`/users/lists`, async (request, response) => {
     const list = request.body;
-    const search = await sql`SELECT * FROM Lists WHERE id = ${listID};`;
+    const search = await sql`SELECT * FROM Lists WHERE id = ${list.listID};`;
     if (search.length == 0) {
-        response.status(404).send(`Error in finding list with id ${listID}`);
+        response.status(404).send(`Error in finding list with id ${list.listID}`);
     } else {
         const created = await sql`UPDATE Lists SET name = ${list.name}, description = ${list.description}
-         WHERE id = ${listID};`;
+         WHERE id = ${list.listID};`;
         response.send(created);
     }
 });
@@ -177,7 +175,6 @@ app.post(`/lists`, async (request, response) => {
         }
     } else {
         const list = await sql`SELECT id FROM Lists WHERE name LIKE ${listName} AND user_id = ${userID};`;
-        console.log(list);
         const check = await sql`SELECT * FROM BookLists WHERE book_id = ${bookID} AND list_id = ${list[0].id};`;
         if (check.length == 0) {
             const insert = await sql`INSERT INTO BookLists (book_id, list_id) VALUES (${bookID}, ${list[0].id});`;
@@ -205,6 +202,12 @@ app.delete(`/lists/:listID/:bookID`, async (request, response) => {
 app.get(`/languages`, async (request, response) => {
     const langs = await sql`SELECT DISTINCT language FROM Books;`;
     response.send(langs);
+});
+
+app.get(`/authors/:name`, async (request, response) => {
+    const name = request.params.name;
+    const authors = await sql`SELECT id, cover, title, author FROM Books WHERE author LIKE ${name};`;
+    response.send(authors);
 });
 
 // ---------- genres
