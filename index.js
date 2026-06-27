@@ -63,7 +63,7 @@ app.put(`/books/:id`, async (request, response) => {
         response.status(404).send(`Error in finding book with id ${id}`);
     } else {
         const created = await sql`UPDATE Books SET title = ${book.title}, cover = ${book.cover}, author = ${book.author}, summary = ${book.summary},
-         year = ${book.year}, language = ${book.language} pages = ${book.pages} WHERE id = ${id};`;
+         year = ${book.year}, language = ${book.language}, pages = ${book.pages} WHERE id = ${id};`;
         response.send(created);
     }
 });
