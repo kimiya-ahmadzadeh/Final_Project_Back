@@ -125,21 +125,27 @@ app.get(`/users/lists/:userID`, async (request, response) => {
     lists.length == 0 ? response.status(404).send(`Error in finding lists for user with id ${userID}`) : response.send(lists);
 });
 
+app.get(`/users/list/:listID`, async (request, response) => {
+    const listID = request.params.listID;
+    const lists = await sql`SELECT id, name, description, created FROM Lists WHERE id = ${listID};`
+    lists.length == 0 ? response.status(404).send(`Error in finding lists for user with id ${listID}`) : response.send(lists);
+});
+
 app.post(`/users/lists`, async (request, response) => {
     const list = request.body;
     const created = await sql`INSERT INTO Lists (name, description, user_id, admin_id, created)
-    VALUES (${list.name}, ${list.description}, ${list.user_id}, ${null}, ${true});`;
+    VALUES (${list.name}, ${list.description}, ${list.user_id}, ${list.admin_id}, ${true});`;
     response.send(created);
 });
 
 app.put(`/users/lists`, async (request, response) => {
     const list = request.body;
-    const search = await sql`SELECT * FROM Lists WHERE id = ${list.listID};`;
+    const search = await sql`SELECT * FROM Lists WHERE id = ${list.id};`;
     if (search.length == 0) {
-        response.status(404).send(`Error in finding list with id ${list.listID}`);
+        response.status(404).send(`Error in finding list with id ${list.id}`);
     } else {
         const created = await sql`UPDATE Lists SET name = ${list.name}, description = ${list.description}
-         WHERE id = ${list.listID};`;
+         WHERE id = ${list.id};`;
         response.send(created);
     }
 });
@@ -151,6 +157,28 @@ app.delete(`/users/lists/:listID`, async (request, response) => {
         response.status(404).send(`Error in finding list with id ${listID}`);
     } else {
         await sql`DELETE FROM Lists WHERE id = ${listID};`;
+        response.send('Deleted list successfully!');
+    }
+});
+
+
+// -------- admin 
+
+app.get(`/admin/lists/:adminID`, async (request, response) => {
+    const adminID = request.params.adminID;
+    const lists = await sql`SELECT id, name, description FROM Lists WHERE admin_id = ${adminID};`;
+    response.send(lists);
+});
+
+
+app.delete(`/admin/lists/:adminID/:listID`, async (request, response) => {
+    const listID = request.params.listID;
+    const adminID = request.params.adminID;
+    const search = await sql`SELECT * FROM Lists WHERE id = ${listID} AND admin_id = ${adminID};`;
+    if (search.length == 0) {
+        response.status(404).send(`Error in finding list with id ${listID}`);
+    } else {
+        await sql`DELETE FROM Lists WHERE id = ${listID} AND admin_id = ${adminID};`;
         response.send('Deleted list successfully!');
     }
 });
@@ -223,9 +251,21 @@ app.get(`/genres/:genreID`, async (request, response) => {
     response.send(genre);
 });
 
+app.put(`/genres`, async (request, response) => {
+    const genre = request.body;
+    const edited = await sql`UPDATE Subjects SET name = ${genre.name} WHERE id = ${genre.id};`;
+    response.send(edited);
+});
+
 app.post(`/genres`, async (request, response) => {
     const genre = request.body;
     const created = await sql`INSERT INTO Subjects (name) VALUES (${genre.name});`;
+});
+
+app.delete(`/genres/:genreID`, async (request, response) => {
+    const genreID = request.params.genreID;
+    const cleared = await sql`DELETE FROM Subjects WHERE id = ${genreID};`;
+    response.send("Deleted genre.");
 });
 
 // ------- book genres
