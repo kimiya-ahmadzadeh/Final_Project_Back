@@ -225,6 +225,12 @@ app.delete(`/lists/:listID/:bookID`, async (request, response) => {
     }
 });
 
+app.delete(`/list/:listID`, async (request, response) => {
+    const listID = request.params.listID;
+    const cleared = await sql`DELETE FROM BookLists WHERE list_id = ${listID}`;
+    response.send("Deleted list from books");
+});
+
 // ----------- search 
 
 app.get(`/languages`, async (request, response) => {
@@ -306,6 +312,12 @@ app.delete(`/genres/:bookID`, async (request, response) => {
     const bookID = request.params.bookID;
     const clear = await sql`DELETE FROM BookSubjects WHERE book_id = ${bookID};`;
     response.send("Deleted genres for book.")
+});
+
+app.delete(`/genre/:genreID`, async (request, response) => {
+    const genreID = request.params.genreID;
+    const clear = await sql`DELETE FROM BookSubjects WHERE subject_id = ${genreID};`;
+    response.send("Deleted genre");
 });
 
 // --------- comments
