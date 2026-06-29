@@ -24,7 +24,7 @@ app.post(`/login`, async (request, response) => {
     const { username, password } = request.body;
     const user = await sql`SELECT * FROM Users WHERE username = ${username} AND password = ${password};`;
     if (user && user.length > 0) {
-        response.send({ error: false, user: { id: user[0].id } });
+        response.send({ error: false, user: { id: user[0].id, admin: user[0].is_admin } });
     } else {
         response.send({ error: true });
     }
