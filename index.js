@@ -121,20 +121,20 @@ app.delete(`/users/:id`, async (request, response) => {
 
 app.get(`/users/lists/:userID`, async (request, response) => {
     const userID = request.params.userID;
-    const lists = await sql`SELECT id, name, description, created FROM Lists WHERE user_id = ${userID};`
-    lists.length == 0 ? response.status(404).send(`Error in finding lists for user with id ${userID}`) : response.send(lists);
+    const lists = await sql`SELECT id, name, description, created FROM Lists WHERE user_id = ${userID} AND public = FALSE;`
+    response.send(lists);
 });
 
 app.get(`/users/list/:listID`, async (request, response) => {
     const listID = request.params.listID;
     const lists = await sql`SELECT id, name, description, created FROM Lists WHERE id = ${listID};`
-    lists.length == 0 ? response.status(404).send(`Error in finding lists for user with id ${listID}`) : response.send(lists);
+    lists.length == 0 ? response.status(404).send(`Error in finding lists for user with id ${listID}`) : response.send(lists[0]);
 });
 
 app.post(`/users/lists`, async (request, response) => {
     const list = request.body;
-    const created = await sql`INSERT INTO Lists (name, description, user_id, admin_id, created)
-    VALUES (${list.name}, ${list.description}, ${list.user_id}, ${list.admin_id}, ${true});`;
+    const created = await sql`INSERT INTO Lists (name, description, user_id, public, created)
+    VALUES (${list.name}, ${list.description}, ${list.user_id}, FALSE, TRUE);`;
     response.send(created);
 });
 
@@ -164,21 +164,37 @@ app.delete(`/users/lists/:listID`, async (request, response) => {
 
 // -------- admin 
 
-app.get(`/admin/lists/:adminID`, async (request, response) => {
-    const adminID = request.params.adminID;
-    const lists = await sql`SELECT id, name, description FROM Lists WHERE admin_id = ${adminID};`;
+app.get(`/admin/lists`, async (request, response) => {
+    const lists = await sql`SELECT id, name, description FROM Lists WHERE public = TRUE;`;
     response.send(lists);
 });
 
+app.get(`/admin/recs`, async (request, response) => {
+    const lists = await sql`SELECT id, name, description FROM Lists WHERE public = TRUE ORDER BY RANDOM() LIMIT 3;`;
+    response.send(lists);
+});
+
+app.get(`/admin/lists/:id`, async (request, response) => {
+    const listID = request.params.id;
+    const list = await sql`SELECT id, name, description FROM Lists WHERE public = TRUE AND id = ${listID};`;
+    response.send(list[0]);
+});
+
+app.post(`/admin/lists`, async (request, response) => {
+    const list = request.body;
+    const posted = await sql`INSERT INTO Lists (name, description, user_id, public, created) VALUES
+    (${list.name}, ${list.description}, ${list.user_id}, TRUE, TRUE);`;
+    response.send("Added successfully.");
+});
 
 app.delete(`/admin/lists/:adminID/:listID`, async (request, response) => {
     const listID = request.params.listID;
     const adminID = request.params.adminID;
-    const search = await sql`SELECT * FROM Lists WHERE id = ${listID} AND admin_id = ${adminID};`;
+    const search = await sql`SELECT * FROM Lists WHERE id = ${listID} AND public = TRUE;`;
     if (search.length == 0) {
         response.status(404).send(`Error in finding list with id ${listID}`);
     } else {
-        await sql`DELETE FROM Lists WHERE id = ${listID} AND admin_id = ${adminID};`;
+        await sql`DELETE FROM Lists WHERE id = ${listID} AND public = TRUE;`;
         response.send('Deleted list successfully!');
     }
 });
@@ -254,7 +270,12 @@ app.get(`/genres`, async (request, response) => {
 app.get(`/genres/:genreID`, async (request, response) => {
     const genreID = request.params.genreID;
     const genre = await sql`SELECT * FROM Subjects WHERE id = ${genreID};`;
-    response.send(genre);
+    response.send(genre[0]);
+});
+
+app.get(`/random/genres`, async (request, response) => {
+    const genres = await sql`SELECT * FROM SUBJECTS ORDER BY RANDOM() LIMIT 3;`;
+    response.send(genres);
 });
 
 app.put(`/genres`, async (request, response) => {
