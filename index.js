@@ -35,11 +35,11 @@ app.post(`/login`, async (request, response) => {
 app.get(`/books/:id`, async (request, response) => {
     const id = request.params.id;
     const book = await sql`SELECT * FROM Books WHERE id = ${id};`
-    book.length == 0 ? response.status(404).send(`Error in finding book with id ${id}`) : response.send(book[0]);
+    response.send(book[0]);
 });
 
 app.get(`/books`, async (request, response) => {
-    const books = await sql`SELECT * FROM Books b;`;
+    const books = await sql`SELECT * FROM Books b ORDER BY id;`;
     response.send(books);
 });
 
@@ -84,7 +84,7 @@ app.delete(`/books/:id`, async (request, response) => {
 app.get(`/users/:userID`, async (request, response) => {
     const userID = request.params.userID;
     const user = await sql`SELECT * FROM Users WHERE id = ${userID};`
-    user.length == 0 ? response.status(404).send(`Error in finding user with id ${userID}`) : response.send(user[0]);
+    response.send(user[0]);
 });
 
 app.post(`/users`, async (request, response) => {
@@ -121,14 +121,14 @@ app.delete(`/users/:id`, async (request, response) => {
 
 app.get(`/users/lists/:userID`, async (request, response) => {
     const userID = request.params.userID;
-    const lists = await sql`SELECT id, name, description, created FROM Lists WHERE user_id = ${userID} AND public = FALSE;`
+    const lists = await sql`SELECT id, name, description, created FROM Lists WHERE user_id = ${userID} AND public = FALSE ORDER BY id;`
     response.send(lists);
 });
 
 app.get(`/users/list/:listID`, async (request, response) => {
     const listID = request.params.listID;
     const lists = await sql`SELECT id, name, description, created FROM Lists WHERE id = ${listID};`
-    lists.length == 0 ? response.status(404).send(`Error in finding lists for user with id ${listID}`) : response.send(lists[0]);
+    response.send(lists[0]);
 });
 
 app.post(`/users/lists`, async (request, response) => {
@@ -165,12 +165,13 @@ app.delete(`/users/lists/:listID`, async (request, response) => {
 // -------- admin 
 
 app.get(`/admin/lists`, async (request, response) => {
-    const lists = await sql`SELECT id, name, description FROM Lists WHERE public = TRUE;`;
+    const lists = await sql`SELECT id, name, description FROM Lists WHERE public = TRUE ORDER BY id;`;
     response.send(lists);
 });
 
 app.get(`/admin/recs`, async (request, response) => {
-    const lists = await sql`SELECT id, name, description FROM Lists WHERE public = TRUE ORDER BY RANDOM() LIMIT 3;`;
+    const lists = await sql`SELECT id, name, description FROM Lists WHERE public = TRUE
+     ORDER BY RANDOM() LIMIT 3;`;
     response.send(lists);
 });
 
@@ -203,7 +204,8 @@ app.delete(`/admin/lists/:adminID/:listID`, async (request, response) => {
 
 app.get(`/lists/:listID`, async (request, response) => {
     const listID = request.params.listID;
-    const books = await sql`SELECT id, cover, title, author FROM Books b JOIN BookLists l on b.id = l.book_id WHERE list_id = ${listID};`;
+    const books = await sql`SELECT id, cover, title, author FROM Books b JOIN BookLists l on b.id = l.book_id
+     WHERE list_id = ${listID} ORDER BY id;`;
     response.send(books);
 });
 
@@ -256,14 +258,14 @@ app.get(`/languages`, async (request, response) => {
 
 app.get(`/authors/:name`, async (request, response) => {
     const name = request.params.name;
-    const authors = await sql`SELECT id, cover, title, author FROM Books WHERE author LIKE ${name};`;
+    const authors = await sql`SELECT id, cover, title, author FROM Books WHERE author LIKE ${name} ORDER BY id;`;
     response.send(authors);
 });
 
 // ---------- genres
 
 app.get(`/genres`, async (request, response) => {
-    const genres = await sql`SELECT * FROM Subjects;`;
+    const genres = await sql`SELECT * FROM Subjects ORDER BY id;`;
     response.send(genres);
 });
 
@@ -307,13 +309,14 @@ app.get(`/genres/:genreID/:bookID`, async (request, response) => {
 app.get(`/books/genre/:genreID`, async (request, response) => {
     const genreID = request.params.genreID;
     const books = await sql`SELECT id, cover, title, author FROM Books b JOIN BookSubjects s on b.id = s.book_id
-    WHERE s.subject_id = ${genreID};`
+    WHERE s.subject_id = ${genreID} ORDER BY id;`
     response.send(books);
 });
 
 app.get(`/book/genres/:bookID`, async (request, response) => {
     const bookID = request.params.bookID;
-    const genres = await sql`SELECT s.id, s.name FROM BookSubjects b JOIN Subjects s ON b.subject_id = s.id WHERE b.book_id = ${bookID};`;
+    const genres = await sql`SELECT s.id, s.name FROM BookSubjects b JOIN Subjects s ON b.subject_id = s.id
+     WHERE b.book_id = ${bookID} ORDER BY id;`;
     response.send(genres);
 });
 
@@ -329,7 +332,7 @@ app.post(`/genres/book`, async (request, response) => {
     }
 });
 
-app.delete(`/genres/:bookID`, async (request, response) => {
+app.delete(`/books/genres/:bookID`, async (request, response) => {
     const bookID = request.params.bookID;
     const clear = await sql`DELETE FROM BookSubjects WHERE book_id = ${bookID};`;
     response.send("Deleted genres for book.")
@@ -345,13 +348,14 @@ app.delete(`/genre/:genreID`, async (request, response) => {
 
 app.get(`/comments/:bookID`, async (request, response) => {
     const bookID = request.params.bookID;
-    const comments = await sql`SELECT c.id, c.user_id, c.text, u.first_name, u.last_name FROM Comments c JOIN Users u ON c.user_id = u.id WHERE c.book_id = ${bookID};`;
+    const comments = await sql`SELECT c.id, c.user_id, c.text, c.date::date, u.first_name, u.last_name FROM Comments c
+     JOIN Users u ON c.user_id = u.id WHERE c.book_id = ${bookID} ORDER BY date DESC;`;
     response.send(comments);
 });
 
 app.post(`/comments`, async (request, response) => {
     const comment = request.body;
-    const post = await sql`INSERT INTO Comments (user_id, book_id, text) VALUES (${comment.user_id}, ${comment.book_id}, ${comment.text});`;
+    const post = await sql`INSERT INTO Comments (user_id, book_id, text, date) VALUES (${comment.user_id}, ${comment.book_id}, ${comment.text}, CURRENT_DATE);`;
     response.send(post);
 });
 
