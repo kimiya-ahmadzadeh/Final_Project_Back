@@ -43,6 +43,12 @@ app.get(`/books`, async (request, response) => {
     response.send(books);
 });
 
+app.get(`/book/pdf/:id`, async (request, response) => {
+    const id = request.params.id;
+    const pdf = await sql`SELECT pdf FROM Books WHERE id=${id};`;
+    response.send(pdf[0]);
+});
+
 app.post(`/books`, async (request, response) => {
     const book = request.body;
     const search = await sql`SELECT * FROM Books WHERE id = ${book.id};`;
